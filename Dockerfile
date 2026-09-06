@@ -2,10 +2,17 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Las dependencias se instalan antes de copiar el codigo para que la capa
-# quede cacheada y cada cambio del tablero no reinstale todo.
-COPY pyproject.toml ./
-RUN pip install --no-cache-dir . && rm -rf /root/.cache
+# Se instala desde uv.lock y no resolviendo pyproject: una reconstruccion
+# meses despues trae exactamente las mismas versiones. La Entrega 3 califica
+# los artefactos de despliegue, y un contenedor que no reconstruye igual no
+# sirve como artefacto.
+#
+# Van antes de copiar el codigo para que la capa quede cacheada y cada cambio
+# del tablero no reinstale todo.
+COPY pyproject.toml uv.lock ./
+RUN pip install --no-cache-dir uv \
+    && uv sync --frozen --no-dev --no-install-project \
+    && rm -rf /root/.cache
 
 COPY . .
 
@@ -19,4 +26,4 @@ ENV PORT=8501
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
     CMD python -c "import os, urllib.request; p = os.environ.get('PORT', '8501'); urllib.request.urlopen('http://localhost:' + p + '/_stcore/health')"
 
-CMD streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0
+CMD .venv/bin/streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0
