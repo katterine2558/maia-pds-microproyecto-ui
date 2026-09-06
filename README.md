@@ -33,6 +33,25 @@ El enunciado exige ambas; una sola no cumple.
 | Predicción | Emplea el modelo **a través de la API**: arma el encuentro y llama `POST /predict` |
 | Datos | Visualiza datos descriptivos relevantes para el usuario |
 
+## Desplegado
+
+El tablero corre en Railway, construido desde el Dockerfile de este repositorio:
+
+**https://maia-pds-microproyecto-ui-production-79db.up.railway.app**
+
+Railway sigue la rama `develop` y reconstruye sola en cada push. El proyecto se
+llama `maia-pds-tablero`.
+
+Un detalle que cuesta encontrar si no se miran los logs: **Railway inyecta su
+propia variable `PORT` en tiempo de ejecucion y pisa el `ENV PORT` de la
+imagen**. Por eso el `CMD` usa `${PORT:-8501}` en lugar de un puerto fijo, y por
+eso el puerto destino del dominio en Railway es el que aparece en los logs de
+despliegue (`Uvicorn server started on 0.0.0.0:8080`), no el del `EXPOSE`.
+
+Falta apuntar la variable `API_URL` a la API cuando esta se despliegue. Mientras
+tanto las tres vistas cargan, pero el boton de calcular riesgo devuelve error de
+conexion.
+
 ## Levantar el tablero
 
 ### Local
