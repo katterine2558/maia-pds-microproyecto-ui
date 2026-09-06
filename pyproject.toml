@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "Tablero de reingreso hospitalario a 30 dias en pacientes diabeticos"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "streamlit>=1.38",
+    # filter_mode en st.selectbox no existe en versiones anteriores.
+    "streamlit>=1.63",
     "requests>=2.32",
     "pandas>=2.2",
     "plotly>=5.24",
