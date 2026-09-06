@@ -20,13 +20,28 @@ def _build_css() -> str:
     }}
 
     /* ---- Barra superior de Streamlit: sin "Deploy" ni menu, no son parte
-    de la maqueta. El control para colapsar el sidebar vive dentro del
-    propio sidebar (no en este header), asi que aqui el header se deja sin
-    fondo y sin capturar clics: cuando Streamlit detecta el indicador de
-    "running" le pone un fondo blanco opaco que, al estar por encima en
-    z-index, tapa nuestro topbar aunque sus botones ya esten ocultos. ---- */
+    de la maqueta.
 
-    [data-testid="stToolbar"] {{
+    Se ocultan las piezas una por una y NO la barra completa. Streamlit
+    renderiza dentro de `stToolbar` el boton que vuelve a abrir el sidebar
+    cuando esta colapsado; al ocultar `stToolbar` entero ese boton queda con
+    caja de 0px y colapsar el sidebar se vuelve un camino sin retorno.
+
+    El header se deja sin fondo y sin capturar clics: cuando Streamlit detecta
+    el indicador de "running" le pone un fondo blanco opaco que, al estar por
+    encima en z-index, tapa nuestro topbar aunque sus botones ya esten
+    ocultos. El boton de reabrir el sidebar recupera los clics por su cuenta,
+    mas abajo. ---- */
+
+    [data-testid="stToolbarActions"] {{
+        display: none !important;
+    }}
+
+    [data-testid="stAppDeployButton"] {{
+        display: none !important;
+    }}
+
+    [data-testid="stStatusWidget"] {{
         display: none !important;
     }}
 
@@ -35,12 +50,18 @@ def _build_css() -> str:
     }}
 
     #MainMenu {{
-        visibility: hidden !important;
+        display: none !important;
     }}
 
     [data-testid="stHeader"] {{
         background: transparent !important;
         pointer-events: none !important;
+    }}
+
+    /* Unico control del header que si debe recibir clics. */
+    [data-testid="stExpandSidebarButton"] {{
+        pointer-events: auto !important;
+        color: {c.text_primary} !important;
     }}
 
     /* ---- Streamlit reserva 6rem de padding-top en el contenedor principal
@@ -68,6 +89,9 @@ def _build_css() -> str:
         font-size: 1.75rem;
         font-weight: 700;
         margin: 0;
+        /* Con !important porque la regla `h1, h2, h3` de mas arriba pierde
+        por especificidad contra la propia hoja de Streamlit. */
+        color: {c.text_primary} !important;
     }}
 
     .app-topbar time {{
@@ -146,13 +170,27 @@ def _build_css() -> str:
         margin-top: 2rem;
     }}
 
-    [data-testid="stSidebar"] [data-baseweb="select"] > div {{
+    /* Streamlit 1.63 cambio el selectbox de BaseWeb a react-aria: se cubren
+    las dos marcas para no depender de la version. El sidebar es la unica
+    superficie oscura del tablero, asi que su selector necesita fondo propio;
+    los del area principal los resuelve el tema claro. ---- */
+
+    [data-testid="stSidebar"] [data-baseweb="select"] > div,
+    [data-testid="stSidebar"] .react-aria-ComboBox > div,
+    [data-testid="stSidebar"] .react-aria-ComboBox input {{
         background-color: {c.sidebar_bg_active} !important;
         border-color: {c.sidebar_text_muted} !important;
+        color: {c.sidebar_text} !important;
     }}
 
-    [data-testid="stSidebar"] [data-baseweb="select"] svg {{
+    [data-testid="stSidebar"] .react-aria-ComboBox input::placeholder {{
+        color: {c.sidebar_text_muted} !important;
+    }}
+
+    [data-testid="stSidebar"] [data-baseweb="select"] svg,
+    [data-testid="stSidebar"] .react-aria-ComboBox svg {{
         fill: {c.sidebar_text} !important;
+        color: {c.sidebar_text} !important;
     }}
 
     [data-testid="stSidebar"] [data-testid="stSelectbox"],
