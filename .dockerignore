@@ -17,3 +17,6 @@ ARCHITECTURE.md
 README.md
 CLAUDE.md
 .claude/
+
+# Railway construye con el Dockerfile del repositorio; este archivo no le sirve.
+railway.json
