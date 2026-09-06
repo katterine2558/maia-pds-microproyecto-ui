@@ -1,0 +1,14 @@
+# Fija el tema en claro. Sin esto Streamlit lo resuelve segun la preferencia
+# del sistema de quien mira: en modo oscuro pone su color de texto por defecto
+# (#FAFAFA) mientras el CSS del tablero pinta el fondo claro a mano, y todo lo
+# que Streamlit colorea por su cuenta queda blanco sobre blanco.
+#
+# Los valores replican los tokens de config/theme.py. Si esos cambian, cambiar
+# aqui tambien: Streamlit no lee el modulo de Python.
+
+[theme]
+base = "light"
+backgroundColor = "#FBFDFC"
+secondaryBackgroundColor = "#F6F8F7"
+textColor = "#1B1F1E"
+primaryColor = "#1E5F52"
