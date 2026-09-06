@@ -7,26 +7,44 @@ semanas 4 a 6, siguiendo la maqueta.
 
 import streamlit as st
 
-from services import api
+from components.sidebar import render_sidebar
+from components.styles import load_css
+from config.nav import NAV_ITEMS
+from views import contexto, paciente, priorizacion
+
 
 st.set_page_config(page_title="Reingreso a 30 dias", layout="wide")
+load_css()
 
-st.title("Reingreso hospitalario a 30 dias")
-st.caption("Pacientes diabeticos — apoyo a la decision de a quien agendar seguimiento al alta")
+_VIEW_RENDERERS = {
+    "priorizacion": priorizacion.render,
+    "paciente": paciente.render,
+    "contexto": contexto.render,
+}
+UNIDADES_DISPONIBLES = ["Hospital central"]
 
-with st.sidebar:
-    st.subheader("Conexion")
-    st.code(api.API_URL, language=None)
-    if st.button("Probar API"):
-        try:
-            st.success(api.salud())
-        except api.ApiError as exc:
-            st.error(str(exc))
+paginas_por_key = {
+    item.key: st.Page(
+        _VIEW_RENDERERS[item.key],
+        title=item.label,
+        url_path=item.key,
+        default=(item.key == NAV_ITEMS[0].key),
+    )
+    for item in NAV_ITEMS
+}
 
-prediccion, descriptivo = st.tabs(["Prediccion", "Datos"])
+pagina_activa = st.navigation(list(paginas_por_key.values()), position="hidden")
 
-with prediccion:
-    st.info("Pendiente: formulario de encuentro y llamada a `api.predecir`.")
+unidad_seleccionada = render_sidebar(
+    nav_items=NAV_ITEMS,
+    pages_by_key=paginas_por_key,
+    # La pagina default de st.Page siempre tiene url_path == "" (el parametro
+    # url_path se ignora para ella), asi que el "" se traduce de vuelta al key
+    # del primer item del nav para que el resaltado de seleccionado funcione.
+    active_key=pagina_activa.url_path or NAV_ITEMS[0].key,
+    unidades=UNIDADES_DISPONIBLES,
+    unidad_actual=UNIDADES_DISPONIBLES[0],
+)
 
-with descriptivo:
-    st.info("Pendiente: visualizaciones descriptivas segun la maqueta.")
+pagina_activa.run()
+
