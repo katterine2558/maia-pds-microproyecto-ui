@@ -37,10 +37,9 @@ El enunciado exige ambas; una sola no cumple.
 
 El tablero corre en Railway, construido desde el Dockerfile de este repositorio:
 
-**https://maia-pds-microproyecto-ui-production-79db.up.railway.app**
+**https://maia-pds-microproyecto-ui-production.up.railway.app**
 
-Railway sigue la rama `develop` y reconstruye sola en cada push. El proyecto se
-llama `maia-pds-tablero`.
+Railway sigue la rama `develop` y reconstruye sola en cada push.
 
 Un detalle que cuesta encontrar si no se miran los logs: **Railway inyecta su
 propia variable `PORT` en tiempo de ejecucion y pisa el `ENV PORT` de la
