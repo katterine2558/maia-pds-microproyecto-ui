@@ -1,8 +1,6 @@
 """Tablero de reingreso hospitalario a 30 dias.
 
-Esqueleto inicial: verifica la conexion con la API y deja montadas las dos
-secciones que exige el enunciado. El contenido de cada una se desarrolla en las
-semanas 4 a 6, siguiendo la maqueta.
+Esqueleto inicial: Este archivo configura la aplicación de Streamlit y define la navegación entre las diferentes vistas.
 """
 
 import streamlit as st

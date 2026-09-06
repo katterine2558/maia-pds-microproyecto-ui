@@ -8,6 +8,7 @@ import streamlit as st
 
 from components.tarjeta_resultado import render_tarjeta_resultado
 from components.topbar import render_page_header
+from services import api
 from utils.fecha import formatear_fecha_hora
 
 _RANGOS_EDAD = [
@@ -46,35 +47,54 @@ def render() -> None:
         with st.container(key="paciente-formulario"):
             col_izq, col_der = st.columns(2)
             with col_izq:
-                st.selectbox("Rango de edad", options=_RANGOS_EDAD, index=_RANGOS_EDAD.index("[70-80)"), filter_mode=None)
+                rango_edad = st.selectbox(
+                    "Rango de edad", options=_RANGOS_EDAD, index=_RANGOS_EDAD.index("[70-80)"), filter_mode=None
+                )
             with col_der:
-                st.selectbox("Tipo de admisión", options=_TIPOS_ADMISION, filter_mode=None)
+                tipo_admision = st.selectbox("Tipo de admisión", options=_TIPOS_ADMISION, filter_mode=None)
 
             col_izq, col_der = st.columns(2)
             with col_izq:
-                st.selectbox("Servicio que da el alta", options=_SERVICIOS, filter_mode=None)
+                servicio_alta = st.selectbox("Servicio que da el alta", options=_SERVICIOS, filter_mode=None)
             with col_der:
-                st.number_input("Días de estancia", min_value=1, value=9, step=1)
+                dias_estancia = st.number_input("Días de estancia", min_value=1, value=9, step=1)
 
             col_izq, col_der = st.columns(2)
             with col_izq:
-                st.number_input("N.º de diagnósticos", min_value=1, value=9, step=1)
+                num_diagnosticos = st.number_input("N.º de diagnósticos", min_value=1, value=9, step=1)
             with col_der:
-                st.number_input("N.º de medicamentos", min_value=1, value=21, step=1)
+                num_medicamentos = st.number_input("N.º de medicamentos", min_value=1, value=21, step=1)
 
             col_izq, col_der = st.columns(2)
             with col_izq:
-                st.number_input("Ingresos previos (1 año)", min_value=0, value=5, step=1)
+                ingresos_previos = st.number_input("Ingresos previos (1 año)", min_value=0, value=5, step=1)
             with col_der:
-                st.number_input("Urgencias previas (1 año)", min_value=0, value=2, step=1)
+                urgencias_previas = st.number_input("Urgencias previas (1 año)", min_value=0, value=2, step=1)
 
             col_izq, col_der = st.columns(2)
             with col_izq:
-                st.selectbox("Resultado de A1C", options=_RESULTADOS_A1C, filter_mode=None)
+                resultado_a1c = st.selectbox("Resultado de A1C", options=_RESULTADOS_A1C, filter_mode=None)
             with col_der:
-                st.selectbox("Cambio de medicación", options=_CAMBIO_MEDICACION, filter_mode=None)
+                cambio_medicacion = st.selectbox("Cambio de medicación", options=_CAMBIO_MEDICACION, filter_mode=None)
 
-            st.button("Calcular riesgo", type="primary")
+            if st.button("Calcular riesgo", type="primary"):
+                encuentro = {
+                    "rango_edad": rango_edad,
+                    "tipo_admision": tipo_admision,
+                    "servicio_alta": servicio_alta,
+                    "dias_estancia": dias_estancia,
+                    "num_diagnosticos": num_diagnosticos,
+                    "num_medicamentos": num_medicamentos,
+                    "ingresos_previos": ingresos_previos,
+                    "urgencias_previas": urgencias_previas,
+                    "resultado_a1c": resultado_a1c,
+                    "cambio_medicacion": cambio_medicacion,
+                }
+                try:
+                    response = api.predecir(encuentro)
+                    st.success(response)
+                except api.ApiError as exc:
+                    st.error(str(exc))
 
     with col_resultado:
         render_tarjeta_resultado(
