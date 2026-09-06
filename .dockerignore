@@ -1,0 +1,19 @@
+# El entorno virtual se construye dentro de la imagen. Si el .venv local
+# entrara por COPY, sobreescribiria el que instalo uv y la imagen quedaria
+# con las dependencias de la maquina de quien construyo.
+.venv/
+__pycache__/
+*.pyc
+
+.git/
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Material de diseno, no hace falta en tiempo de ejecucion.
+ux-ui/
+ARCHITECTURE.md
+README.md
+CLAUDE.md
+.claude/
