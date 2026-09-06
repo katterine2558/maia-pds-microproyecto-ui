@@ -19,6 +19,10 @@ COPY . .
 EXPOSE 8501
 ENV API_URL=http://api:8000
 ENV PORT=8501
+# Sin headless, Streamlit pide un correo por consola la primera vez y el
+# contenedor se queda esperando una entrada que nunca llega.
+ENV STREAMLIT_SERVER_HEADLESS=true
+ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
 # HEALTHCHECK y CMD usan forma shell (sin corchetes) para poder expandir
 # $PORT. Railway inyecta esta variable en runtime; localmente usa el valor
@@ -26,4 +30,7 @@ ENV PORT=8501
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
     CMD python -c "import os, urllib.request; p = os.environ.get('PORT', '8501'); urllib.request.urlopen('http://localhost:' + p + '/_stcore/health')"
 
-CMD .venv/bin/streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0
+CMD .venv/bin/streamlit run app.py \
+    --server.port=${PORT:-8501} \
+    --server.address=0.0.0.0 \
+    --server.headless=true
