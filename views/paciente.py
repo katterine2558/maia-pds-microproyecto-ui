@@ -9,7 +9,6 @@ import streamlit as st
 from components.tarjeta_resultado import render_tarjeta_resultado
 from components.topbar import render_page_header
 from services import api
-from utils.fecha import formatear_fecha_hora
 
 _RANGOS_EDAD = [
     "[0-10)",
@@ -29,17 +28,8 @@ _RESULTADOS_A1C = ["No medido", "Norm", ">7", ">8"]
 _CAMBIO_MEDICACION = ["Sí", "No"]
 
 
-_FACTORES_EJEMPLO = [
-    ("5 ingresos previos en el último año", 100),
-    ("Estancia de 9 días", 58),
-    ("A1C no medida en el episodio", 41),
-    ("9 diagnósticos registrados", 33),
-    ("Alta desde nefrología", 26),
-]
-
-
 def render() -> None:
-    render_page_header("Evaluar paciente", "POST /predict · 142 ms")
+    render_page_header("Evaluar paciente", "Predicción mediante la API")
 
     col_form, col_resultado = st.columns([1.05, 1], gap="large")
 
@@ -92,15 +82,32 @@ def render() -> None:
                 }
                 try:
                     response = api.predecir(encuentro)
-                    st.success(response)
+                    probabilidad = response.get("probabilidad")
+                    if isinstance(probabilidad, bool) or not isinstance(probabilidad, (int, float)) or not 0 <= probabilidad <= 1:
+                        raise api.ApiError("La API no devolvió una probabilidad válida entre 0 y 1.")
+                    umbral = response.get("umbral")
+                    if isinstance(umbral, bool) or not isinstance(umbral, (int, float)) or not 0 <= umbral <= 1:
+                        raise api.ApiError("La API no devolvió el umbral de decisión del modelo.")
+                    st.session_state["resultado_paciente"] = response
                 except api.ApiError as exc:
+                    st.session_state.pop("resultado_paciente", None)
                     st.error(str(exc))
 
     with col_resultado:
-        render_tarjeta_resultado(
-            probabilidad=0.52,
-            nivel_riesgo="Alto",
-            cohorte_pct=11.4,
-            factores=_FACTORES_EJEMPLO,
-            nota="La probabilidad se muestra calibrada. Un valor sin calibrar induce a error al usuario clínico.",
-        )
+        resultado = st.session_state.get("resultado_paciente")
+        if resultado is None:
+            st.info("Ingresa los datos del encuentro y pulsa Calcular riesgo para consultar la API.")
+        else:
+            probabilidad = float(resultado["probabilidad"])
+            umbral = resultado.get("umbral")
+            nivel = "Alto" if probabilidad >= umbral else "Bajo"
+            nota = f"Umbral de decisión: {umbral:.2f}. Resultado orientativo; requiere criterio clínico."
+            render_tarjeta_resultado(
+                probabilidad=probabilidad,
+                nivel_riesgo=nivel,
+                cohorte_pct=11.4,
+                factores=[],
+                nota=nota,
+            )
+            if resultado.get("modelo"):
+                st.caption(f"Modelo: {resultado['modelo']}")
