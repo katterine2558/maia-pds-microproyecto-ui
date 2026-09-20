@@ -1,4 +1,15 @@
-"""Tarjeta que muestra el resultado de la predicción del paciente."""
+"""Tarjeta de resultado del panel de Paciente: HTML a medida.
+
+Misma excepcion deliberada que `components/tabla_priorizacion.py` (ver su
+docstring): la maqueta (`ux-ui/pantallas.html`, bloque `.result`) pide un
+header con fondo distinto al body dentro de una sola caja con esquinas
+redondeadas y texto con tamanos/pesos/colores mixtos. Ningun widget nativo
+(`st.metric`) da ese control sin artefactos — ya lo vivimos con el chip del
+delta de `st.metric` en `components/metric_card.py`.
+
+El HTML vive aqui, escapado con `html.escape`; el estilo vive en
+`components/styles.py` bajo el selector `.tarjeta-resultado`.
+"""
 
 from __future__ import annotations
 
@@ -30,11 +41,16 @@ def _factor(etiqueta: str, porcentaje: int) -> str:
 def render_tarjeta_resultado(
     probabilidad: float,
     nivel_riesgo: str,
-    cohorte_pct: float,
-    factores: list[tuple[str, int]],
     nota: str,
+    factores: list[tuple[str, int]] | None = None,
 ) -> None:
-    """Muestra la probabilidad, el nivel de riesgo y la nota del resultado."""
+    """Pinta la tarjeta completa (header + body) como una sola pieza.
+
+    `factores` queda opcional: el bloque "Que peso en esta estimacion" solo
+    aparece cuando la API devuelve importancias. Hoy `/predict` responde con
+    probabilidad, umbral y version del modelo, asi que la tarjeta se pinta sin
+    ese bloque en lugar de inventarlo.
+    """
     color, fondo = _RIESGO_COLORES[nivel_riesgo]
     valor = f"{probabilidad:.2f}".replace(".", ",")
     etiqueta_riesgo = html.escape(f"Riesgo {nivel_riesgo.lower()}")

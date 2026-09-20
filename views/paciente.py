@@ -9,6 +9,7 @@ import streamlit as st
 from components.tarjeta_resultado import render_tarjeta_resultado
 from components.topbar import render_page_header
 from services import api
+from utils.riesgo import nivel_de_riesgo
 
 _RANGOS_EDAD = [
     "[0-10)",
@@ -26,6 +27,17 @@ _TIPOS_ADMISION = ["Emergency", "Urgent", "Elective", "Newborn", "Not Available"
 _SERVICIOS = ["Nephrology", "InternalMedicine", "Emergency/Trauma", "Family/General", "Surgery-General", "Orthopedics", "Cardiology"]
 _RESULTADOS_A1C = ["No medido", "Norm", ">7", ">8"]
 _CAMBIO_MEDICACION = ["Sí", "No"]
+
+
+def _proporcion(valor: object) -> float | None:
+    """`valor` como float en [0, 1], o None si la API no mando un numero.
+
+    `isinstance(True, int)` es cierto en Python, de ahi el descarte explicito
+    de los booleanos: un `true` en el JSON no puede pasar por probabilidad.
+    """
+    if isinstance(valor, bool) or not isinstance(valor, (int, float)):
+        return None
+    return float(valor) if 0 <= valor <= 1 else None
 
 
 def render() -> None:
@@ -81,14 +93,12 @@ def render() -> None:
                     "cambio_medicacion": cambio_medicacion,
                 }
                 try:
-                    response = api.predecir(encuentro)
-                    probabilidad = response.get("probabilidad")
-                    if isinstance(probabilidad, bool) or not isinstance(probabilidad, (int, float)) or not 0 <= probabilidad <= 1:
+                    respuesta = api.predecir(encuentro)
+                    if _proporcion(respuesta.get("probabilidad")) is None:
                         raise api.ApiError("La API no devolvió una probabilidad válida entre 0 y 1.")
-                    umbral = response.get("umbral")
-                    if isinstance(umbral, bool) or not isinstance(umbral, (int, float)) or not 0 <= umbral <= 1:
+                    if _proporcion(respuesta.get("umbral")) is None:
                         raise api.ApiError("La API no devolvió el umbral de decisión del modelo.")
-                    st.session_state["resultado_paciente"] = response
+                    st.session_state["resultado_paciente"] = respuesta
                 except api.ApiError as exc:
                     st.session_state.pop("resultado_paciente", None)
                     st.error(str(exc))
@@ -99,15 +109,14 @@ def render() -> None:
             st.info("Ingresa los datos del encuentro y pulsa Calcular riesgo para consultar la API.")
         else:
             probabilidad = float(resultado["probabilidad"])
-            umbral = resultado.get("umbral")
-            nivel = "Alto" if probabilidad >= umbral else "Bajo"
-            nota = f"Umbral de decisión: {umbral:.2f}. Resultado orientativo; requiere criterio clínico."
+            umbral = float(resultado["umbral"])
             render_tarjeta_resultado(
                 probabilidad=probabilidad,
-                nivel_riesgo=nivel,
-                cohorte_pct=11.4,
-                factores=[],
-                nota=nota,
+                nivel_riesgo=nivel_de_riesgo(probabilidad, umbral),
+                nota=(
+                    f"Umbral de decisión del modelo: {umbral:.2f}. "
+                    "Resultado orientativo; requiere criterio clínico."
+                ),
             )
             if resultado.get("modelo"):
                 st.caption(f"Modelo: {resultado['modelo']}")
