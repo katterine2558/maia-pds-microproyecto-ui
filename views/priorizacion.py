@@ -41,6 +41,7 @@ _PACIENTES_EJEMPLO = [
 
 def render() -> None:
     render_page_header("Egresos programados", formatear_fecha_hora())
+    st.warning("Vista demostrativa: las cifras y los encuentros de esta pantalla son ejemplos y aún no provienen del modelo.")
 
     columnas = st.columns(len(_CARDS))
     for columna, (key, label, valor, subtitulo, variante) in zip(columnas, _CARDS):
