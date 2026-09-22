@@ -6,7 +6,10 @@ modelo obtenida a traves de la API.
 
 import streamlit as st
 
-from components.tarjeta_resultado import render_tarjeta_resultado
+from components.tarjeta_resultado import (
+    render_tarjeta_resultado,
+    render_tarjeta_resultado_skeleton,
+)
 from components.topbar import render_page_header
 from services import api
 from utils.riesgo import nivel_de_riesgo
@@ -44,6 +47,7 @@ def render() -> None:
     render_page_header("Evaluar paciente", "Predicción mediante la API")
 
     col_form, col_resultado = st.columns([1.05, 1], gap="large")
+    resultado_slot = col_resultado.empty()
 
     with col_form:
         with st.container(key="paciente-formulario"):
@@ -92,6 +96,8 @@ def render() -> None:
                     "resultado_a1c": resultado_a1c,
                     "cambio_medicacion": cambio_medicacion,
                 }
+                with resultado_slot.container():
+                    render_tarjeta_resultado_skeleton()
                 try:
                     respuesta = api.predecir(encuentro)
                     if _proporcion(respuesta.get("probabilidad")) is None:
@@ -101,15 +107,16 @@ def render() -> None:
                     st.session_state["resultado_paciente"] = respuesta
                 except api.ApiError as exc:
                     st.session_state.pop("resultado_paciente", None)
-                    st.error(str(exc))
+                    resultado_slot.error(str(exc))
+                    return
 
-    with col_resultado:
-        resultado = st.session_state.get("resultado_paciente")
-        if resultado is None:
-            st.info("Ingresa los datos del encuentro y pulsa Calcular riesgo para consultar la API.")
-        else:
-            probabilidad = float(resultado["probabilidad"])
-            umbral = float(resultado["umbral"])
+    resultado = st.session_state.get("resultado_paciente")
+    if resultado is None:
+        resultado_slot.info("Ingresa los datos del encuentro y pulsa Calcular riesgo para consultar la API.")
+    else:
+        probabilidad = float(resultado["probabilidad"])
+        umbral = float(resultado["umbral"])
+        with resultado_slot.container():
             render_tarjeta_resultado(
                 probabilidad=probabilidad,
                 nivel_riesgo=nivel_de_riesgo(probabilidad, umbral),

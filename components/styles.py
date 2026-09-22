@@ -476,6 +476,41 @@ def _build_css() -> str:
         margin: 0;
     }}
 
+    /* ---- Skeleton de la tarjeta de resultado (estado de carga mientras
+    se espera la respuesta de /predict) ---- */
+
+    .tarjeta-resultado--skeleton .tarjeta-resultado__header {{
+        background-color: {c.card_bg};
+    }}
+
+    .skeleton-block {{
+        display: block;
+        border-radius: 4px;
+        background: linear-gradient(90deg, {c.track_bg} 25%, {c.card_border} 37%, {c.track_bg} 63%);
+        background-size: 400% 100%;
+        animation: skeleton-shimmer 1.4s ease infinite;
+    }}
+
+    .skeleton-block--valor {{
+        width: 90px;
+        height: 2.7rem;
+    }}
+
+    .skeleton-block--etiqueta {{
+        width: 140px;
+        height: 1rem;
+    }}
+
+    .skeleton-block--linea {{
+        height: 0.85rem;
+        margin-bottom: 0.6rem;
+    }}
+
+    @keyframes skeleton-shimmer {{
+        0% {{ background-position: 100% 0; }}
+        100% {{ background-position: 0 0; }}
+    }}
+
     /* ---- Graficos de barras del panel de Contexto (HTML propio, ver
     components/grafico_barras.py) ---- */
 
