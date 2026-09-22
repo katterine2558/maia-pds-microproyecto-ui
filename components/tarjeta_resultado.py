@@ -82,3 +82,23 @@ def render_tarjeta_resultado(
     )
 
     st.markdown(contenido, unsafe_allow_html=True)
+
+
+def render_tarjeta_resultado_skeleton() -> None:
+    """Placeholder animado con la misma silueta de la tarjeta, mientras se
+    espera la respuesta de `POST /predict`.
+    """
+    contenido = (
+        '<div class="tarjeta-resultado tarjeta-resultado--skeleton">'
+        '<div class="tarjeta-resultado__header">'
+        '<span class="skeleton-block skeleton-block--valor"></span>'
+        '<span class="skeleton-block skeleton-block--etiqueta"></span>'
+        "</div>"
+        '<div class="tarjeta-resultado__body">'
+        '<span class="skeleton-block skeleton-block--linea" style="width:60%"></span>'
+        '<span class="skeleton-block skeleton-block--linea" style="width:90%"></span>'
+        '<span class="skeleton-block skeleton-block--linea" style="width:75%"></span>'
+        "</div>"
+        "</div>"
+    )
+    st.markdown(contenido, unsafe_allow_html=True)
