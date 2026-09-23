@@ -6,7 +6,7 @@ from config.nav import NavItem
 
 APP_TITLE = "Reingreso 30d"
 APP_SUBTITLE = "GESTIÓN HOSPITALARIA"
-APP_VERSION_LABEL = "v0.1 · maqueta"
+APP_VERSION_LABEL = "v1.0 · Entrega 3"
 
 
 def render_sidebar(
@@ -31,7 +31,7 @@ def render_sidebar(
 
 def _render_header() -> None:
     with st.container(key="reingreso-30d", gap="xxsmall"):
-        st.subheader("Regingreso 30d")
+        st.subheader("Reingreso 30d")
         st.caption("GESTION HOSPITALARIA")
 
 
