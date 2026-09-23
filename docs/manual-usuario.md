@@ -11,7 +11,9 @@ clínico.
 
 ## Antes de empezar
 
-- Necesita la dirección del tablero, que le da el equipo del proyecto.
+- El tablero está publicado en
+  <https://maia-pds-microproyecto-ui-production.up.railway.app>. Solo necesita
+  un navegador; no hay que instalar nada ni iniciar sesión.
 - El tablero no guarda nada de lo que usted escribe. Cada consulta se hace en el
   momento y se pierde al recargar la página.
 - No cargue datos reales de pacientes en un despliegue de demostración sin la
