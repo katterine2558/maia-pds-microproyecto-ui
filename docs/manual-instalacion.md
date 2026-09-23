@@ -65,7 +65,8 @@ docker run --rm -p 8501:8501 -e API_URL=http://host.docker.internal:8000 reingre
 |---|---|
 | En la misma máquina, fuera de Docker | `http://host.docker.internal:8000` |
 | En la misma red de Compose | `http://api:8000` |
-| Desplegada | `https://<dominio-de-la-api>` |
+| Desplegada con dominio público | `https://<dominio-de-la-api>` |
+| En Railway, por la red privada | `http://<servicio-api>.railway.internal:<puerto>` |
 
 Sin barra al final: el tablero la agrega.
 
@@ -91,12 +92,18 @@ como arriba.
 Para levantar la API por separado, desde el repositorio `-api`:
 
 ```bash
-uv run uvicorn api.main:app --port 8000
+uv run --no-project --with-requirements api/requirements.txt \
+    uvicorn api.main:app --port 8000
 ```
+
+FastAPI no está en las dependencias base de ese repositorio: la API trae su
+propia lista en `api/requirements.txt`, y por eso el comando la pide aparte.
 
 ## Desplegar en Railway
 
-Ambos servicios se despliegan desde sus Dockerfile. El procedimiento completo
+Ambos servicios se despliegan desde sus Dockerfile, en el mismo proyecto de
+Railway. El tablero tiene dominio público; la API no: el tablero la alcanza
+por la red privada del proyecto. El procedimiento completo
 está en
 [`docs/soportes/despliegue-railway.md`](https://github.com/katterine2558/maia-pds-microproyecto-api/blob/develop/docs/soportes/despliegue-railway.md)
 del repositorio de la API.
@@ -106,12 +113,16 @@ Lo esencial para el tablero:
 1. **New Project → Deploy from GitHub repo** → `maia-pds-microproyecto-ui`.
 2. Rama `develop`. Railway reconstruye sola en cada push.
 3. **Settings → Networking → Generate Domain.**
-4. Agregar la variable `API_URL` con el dominio de la API desplegada.
+4. Agregar la variable `API_URL` con la dirección privada de la API:
+   `http://<servicio-api>.railway.internal:<puerto>`, donde `<servicio-api>`
+   es el nombre del servicio de la API en Railway y `<puerto>` el que
+   aparece en sus logs (`Uvicorn running on http://[::]:<puerto>`). La red
+   privada de Railway es IPv6; el `Dockerfile` de la API ya escucha en `::`.
 
 > Railway inyecta su propia variable `PORT` en tiempo de ejecución y pisa el
 > `ENV PORT` de la imagen. Por eso el `CMD` usa `${PORT:-8501}`, y el puerto
-> destino del dominio es el que aparece en los logs del despliegue
-> (`Uvicorn server started on 0.0.0.0:8080`), no el del `EXPOSE`.
+> destino del dominio es el que Streamlit anuncia en los logs del despliegue
+> (`URL: http://0.0.0.0:<puerto>`), no el del `EXPOSE`.
 
 ## Problemas frecuentes
 

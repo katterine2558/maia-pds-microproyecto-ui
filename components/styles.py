@@ -160,44 +160,6 @@ def _build_css() -> str:
         font-weight: 400;
     }}
 
-    /* ---- Selección de unidad ---- */
-
-    .st-key-sidebar-section-label {{
-        font-family: {t.mono_font};
-        font-size: 0.7rem;
-        letter-spacing: 0.08em;
-        color: {c.sidebar_text_muted} !important;
-        margin-top: 2rem;
-    }}
-
-    /* Streamlit 1.63 cambio el selectbox de BaseWeb a react-aria: se cubren
-    las dos marcas para no depender de la version. El sidebar es la unica
-    superficie oscura del tablero, asi que su selector necesita fondo propio;
-    los del area principal los resuelve el tema claro. ---- */
-
-    [data-testid="stSidebar"] [data-baseweb="select"] > div,
-    [data-testid="stSidebar"] .react-aria-ComboBox > div,
-    [data-testid="stSidebar"] .react-aria-ComboBox input {{
-        background-color: {c.sidebar_bg_active} !important;
-        border-color: {c.sidebar_text_muted} !important;
-        color: {c.sidebar_text} !important;
-    }}
-
-    [data-testid="stSidebar"] .react-aria-ComboBox input::placeholder {{
-        color: {c.sidebar_text_muted} !important;
-    }}
-
-    [data-testid="stSidebar"] [data-baseweb="select"] svg,
-    [data-testid="stSidebar"] .react-aria-ComboBox svg {{
-        fill: {c.sidebar_text} !important;
-        color: {c.sidebar_text} !important;
-    }}
-
-    [data-testid="stSidebar"] [data-testid="stSelectbox"],
-    [data-testid="stSidebar"] [data-testid="stSelectbox"] * {{
-        cursor: pointer !important;
-    }}
-
     /* ---- Footer del sidebar ---- */
 
     .st-key-sidebar-footer {{
