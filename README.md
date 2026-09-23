@@ -48,20 +48,38 @@ eso el puerto destino del dominio en Railway es el que aparece en los logs de
 despliegue (`Uvicorn server started on 0.0.0.0:8080`), no el del `EXPOSE`.
 
 Falta apuntar la variable `API_URL` a la API cuando esta se despliegue. Mientras
-tanto las tres vistas cargan, pero el boton de calcular riesgo devuelve error de
-conexion.
+tanto las tres vistas cargan, pero las dos que consultan el modelo —Paciente y
+Priorizacion— devuelven error de conexion.
+
+## Manuales
+
+- [Manual de usuario](docs/manual-usuario.md) — las tres vistas, el formato del
+  archivo de egresos y como se leen los niveles de riesgo.
+- [Manual de instalacion](docs/manual-instalacion.md) — compose, contenedor,
+  local y despliegue.
 
 ## Levantar el tablero
 
-### Local
+### Las dos piezas juntas
+
+Lo mas corto, y lo que instala el producto completo: el `docker-compose.yml`
+del repositorio de la API construye ambos servicios.
 
 ```bash
-uv sync                          # o: pip install -e .
-cp .env.example .env             # ajusta API_URL si hace falta
-streamlit run app.py             # http://localhost:8501
+git clone https://github.com/katterine2558/maia-pds-microproyecto-api.git
+cd maia-pds-microproyecto-api
+docker compose up --build        # tablero en :8501, API en :8000
 ```
 
-Necesita la API corriendo. Ver el README del repositorio `-api`.
+### Solo el tablero, en local
+
+```bash
+uv sync
+API_URL=http://localhost:8000 uv run streamlit run app.py
+```
+
+Necesita la API corriendo. `services/api.py` lee `API_URL` del entorno: copiar
+`.env.example` a `.env` no la carga por si solo.
 
 ### Contenedor
 

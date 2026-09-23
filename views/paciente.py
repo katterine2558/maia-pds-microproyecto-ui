@@ -6,10 +6,13 @@ modelo obtenida a traves de la API.
 
 import streamlit as st
 
-from components.tarjeta_resultado import render_tarjeta_resultado
+from components.tarjeta_resultado import (
+    render_tarjeta_resultado,
+    render_tarjeta_resultado_skeleton,
+)
 from components.topbar import render_page_header
 from services import api
-from utils.fecha import formatear_fecha_hora
+from utils.riesgo import nivel_de_riesgo
 
 _RANGOS_EDAD = [
     "[0-10)",
@@ -29,19 +32,22 @@ _RESULTADOS_A1C = ["No medido", "Norm", ">7", ">8"]
 _CAMBIO_MEDICACION = ["Sí", "No"]
 
 
-_FACTORES_EJEMPLO = [
-    ("5 ingresos previos en el último año", 100),
-    ("Estancia de 9 días", 58),
-    ("A1C no medida en el episodio", 41),
-    ("9 diagnósticos registrados", 33),
-    ("Alta desde nefrología", 26),
-]
+def _proporcion(valor: object) -> float | None:
+    """`valor` como float en [0, 1], o None si la API no mando un numero.
+
+    `isinstance(True, int)` es cierto en Python, de ahi el descarte explicito
+    de los booleanos: un `true` en el JSON no puede pasar por probabilidad.
+    """
+    if isinstance(valor, bool) or not isinstance(valor, (int, float)):
+        return None
+    return float(valor) if 0 <= valor <= 1 else None
 
 
 def render() -> None:
-    render_page_header("Evaluar paciente", "POST /predict · 142 ms")
+    render_page_header("Evaluar paciente", "Predicción mediante la API")
 
     col_form, col_resultado = st.columns([1.05, 1], gap="large")
+    resultado_slot = col_resultado.empty()
 
     with col_form:
         with st.container(key="paciente-formulario"):
@@ -90,17 +96,34 @@ def render() -> None:
                     "resultado_a1c": resultado_a1c,
                     "cambio_medicacion": cambio_medicacion,
                 }
+                with resultado_slot.container():
+                    render_tarjeta_resultado_skeleton()
                 try:
-                    response = api.predecir(encuentro)
-                    st.success(response)
+                    respuesta = api.predecir(encuentro)
+                    if _proporcion(respuesta.get("probabilidad")) is None:
+                        raise api.ApiError("La API no devolvió una probabilidad válida entre 0 y 1.")
+                    if _proporcion(respuesta.get("umbral")) is None:
+                        raise api.ApiError("La API no devolvió el umbral de decisión del modelo.")
+                    st.session_state["resultado_paciente"] = respuesta
                 except api.ApiError as exc:
-                    st.error(str(exc))
+                    st.session_state.pop("resultado_paciente", None)
+                    resultado_slot.error(str(exc))
+                    return
 
-    with col_resultado:
-        render_tarjeta_resultado(
-            probabilidad=0.52,
-            nivel_riesgo="Alto",
-            cohorte_pct=11.4,
-            factores=_FACTORES_EJEMPLO,
-            nota="La probabilidad se muestra calibrada. Un valor sin calibrar induce a error al usuario clínico.",
-        )
+    resultado = st.session_state.get("resultado_paciente")
+    if resultado is None:
+        resultado_slot.info("Ingresa los datos del encuentro y pulsa Calcular riesgo para consultar la API.")
+    else:
+        probabilidad = float(resultado["probabilidad"])
+        umbral = float(resultado["umbral"])
+        with resultado_slot.container():
+            render_tarjeta_resultado(
+                probabilidad=probabilidad,
+                nivel_riesgo=nivel_de_riesgo(probabilidad, umbral),
+                nota=(
+                    f"Umbral de decisión del modelo: {umbral:.2f}. "
+                    "Resultado orientativo; requiere criterio clínico."
+                ),
+            )
+            if resultado.get("modelo"):
+                st.caption(f"Modelo: {resultado['modelo']}")
